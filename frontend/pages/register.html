@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Serene Resolver — Register</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy:#1A3C6E;--blue:#2563EB;--gray-100:#F1F5F9;--gray-200:#E2E8F0;
+      --gray-400:#94A3B8;--gray-500:#64748B;--gray-700:#334155;--gray-900:#0F172A;
+      --white:#FFFFFF;--red:#DC2626;--red-lt:#FEE2E2;--green:#16A34A;--green-lt:#DCFCE7;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'DM Sans',sans-serif;background:linear-gradient(160deg,#EBF3FF 0%,#F8FAFF 50%,#E8F4FD 100%);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:40px 20px}
+    .brand{text-align:center;margin-bottom:28px}
+    .brand-icon{width:48px;height:48px;border-radius:50%;background:white;border:1px solid var(--gray-200);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:20px;box-shadow:0 2px 8px rgba(26,60,110,.08)}
+    .brand h1{font-family:'Sora',sans-serif;font-size:22px;font-weight:700;color:var(--gray-900)}
+    .brand p{font-size:13px;color:var(--gray-400);margin-top:3px}
+    .card{background:white;border-radius:16px;padding:28px 32px;width:100%;max-width:480px;box-shadow:0 4px 24px rgba(26,60,110,.10);border:1px solid var(--gray-200)}
+    .card h2{font-family:'Sora',sans-serif;font-size:18px;font-weight:700;color:var(--gray-900);margin-bottom:4px}
+    .card .sub{font-size:13px;color:var(--gray-400);margin-bottom:22px}
+    .form-group{margin-bottom:16px}
+    .form-label{display:block;font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:6px}
+    .form-input{width:100%;padding:10px 14px;border:1px solid var(--gray-200);border-radius:8px;font-size:13.5px;font-family:'DM Sans',sans-serif;color:var(--gray-900);background:var(--gray-100);outline:none;transition:all .15s}
+    .form-input:focus{border-color:var(--blue);background:white;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .btn{width:100%;padding:12px;background:var(--blue);color:white;border:none;border-radius:50px;font-size:15px;font-weight:600;font-family:'Sora',sans-serif;cursor:pointer;transition:all .15s}
+    .btn:hover{background:var(--navy);transform:translateY(-1px);box-shadow:0 4px 14px rgba(37,99,235,.3)}
+    .btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+    .link-row{text-align:center;margin-top:16px;font-size:13px;color:var(--gray-500)}
+    .link-row a{color:var(--blue);font-weight:600;text-decoration:none}
+    .link-row a:hover{text-decoration:underline}
+    .alert{padding:10px 14px;border-radius:8px;font-size:13px;font-weight:500;margin-bottom:14px;display:none}
+    .alert-error{background:var(--red-lt);color:var(--red);border:1px solid #FECACA}
+    .alert-success{background:var(--green-lt);color:var(--green);border:1px solid #BBF7D0}
+    .hint{font-size:11.5px;color:var(--gray-400);margin-top:4px}
+  </style>
+</head>
+<body>
+  <div class="brand">
+    <div class="brand-icon">✦</div>
+    <h1>Serene Resolver</h1>
+    <p>Create your student account</p>
+  </div>
+
+  <div class="card">
+    <h2>Create Account</h2>
+    <p class="sub">Register to start submitting and tracking complaints</p>
+
+    <div id="alert" class="alert"></div>
+
+    <form onsubmit="register(event)">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input id="name" class="form-input" type="text" placeholder="Your full name" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">University Email</label>
+        <input id="email" class="form-input" type="email" placeholder="student@university.edu" required>
+        <div class="hint">Use your official university email address</div>
+      </div>
+      <div class="two-col">
+        <div class="form-group">
+          <label class="form-label">Block</label>
+          <input id="block" class="form-input" type="text" placeholder="e.g. Block C" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Room Number</label>
+          <input id="room" class="form-input" type="text" placeholder="e.g. 402-B" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input id="password" class="form-input" type="password" placeholder="Min. 6 characters" required minlength="6">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm Password</label>
+        <input id="confirm" class="form-input" type="password" placeholder="Re-enter password" required>
+      </div>
+      <button type="submit" class="btn" id="regBtn">Create Account →</button>
+    </form>
+    <div class="link-row">Already have an account? <a href="login.html">Sign in</a></div>
+  </div>
+
+  <script>
+    const API = 'http://localhost:5000/api';
+    function el(id){return document.getElementById(id)}
+    function showAlert(id,msg,type='error'){
+      const e=el(id); e.className=`alert alert-${type}`; e.textContent=msg; e.style.display='block';
+      if(type==='success') setTimeout(()=>e.style.display='none',3000);
+    }
+    async function register(e) {
+      e.preventDefault();
+      if (el('password').value !== el('confirm').value) { showAlert('alert','Passwords do not match'); return; }
+      const btn = el('regBtn'); btn.disabled = true; btn.textContent = 'Creating account...';
+      try {
+        const res = await fetch(`${API}/auth/register`, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ name:el('name').value, email:el('email').value, password:el('password').value, block:el('block').value, room:el('room').value })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+        showAlert('alert','Account created! Redirecting to login...','success');
+        setTimeout(()=>window.location.href='login.html', 1500);
+      } catch(err) {
+        showAlert('alert', err.message || 'Registration failed');
+        btn.disabled=false; btn.textContent='Create Account →';
+      }
+    }
+  </script>
+</body>
+</html>

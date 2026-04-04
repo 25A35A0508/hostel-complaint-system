@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Serene Resolver — Manage Complaints</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .filter-row { display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;align-items:center }
+    .search-box { display:flex;align-items:center;gap:8px;background:white;border:1px solid var(--gray-200);border-radius:8px;padding:9px 14px;flex:1;max-width:300px }
+    .search-box input { border:none;background:none;font-size:13px;font-family:var(--font-body);color:var(--gray-700);width:100%;outline:none }
+    .f-sel { padding:9px 12px;border:1px solid var(--gray-200);border-radius:8px;font-size:13px;font-family:var(--font-body);background:white;color:var(--gray-700);outline:none;cursor:pointer }
+    .table-wrap { background:white;border:1px solid var(--gray-200);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden }
+    .table-top { padding:16px 20px;border-bottom:1px solid var(--gray-100);display:flex;justify-content:space-between;align-items:center }
+    .table-top h3 { font-family:var(--font-main);font-size:15px;font-weight:700 }
+    .act-btn { width:28px;height:28px;border-radius:6px;border:1px solid var(--gray-200);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray-500);transition:all .15s;font-size:13px }
+    .act-btn:hover { background:var(--gray-100) }
+    .act-btn.g:hover { background:var(--green-lt);border-color:var(--green);color:var(--green) }
+    .act-btn.r:hover { background:var(--red-lt);border-color:var(--red);color:var(--red) }
+    .act-btn.b:hover { background:var(--blue-lt);border-color:var(--blue);color:var(--blue) }
+    .pagination { display:flex;gap:4px }
+    .pg-btn { padding:5px 10px;border-radius:6px;border:1px solid var(--gray-200);background:white;font-size:12.5px;cursor:pointer;font-family:var(--font-body);color:var(--gray-600) }
+    .pg-btn.active { background:var(--navy);color:white;border-color:var(--navy) }
+    .pg-btn:hover:not(.active) { background:var(--gray-100) }
+    .detail-preview { padding:16px;background:var(--gray-50);border-radius:8px;font-size:13px;color:var(--gray-600);line-height:1.6;margin-bottom:12px }
+    .info-row { display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-100);font-size:13px }
+    .info-row:last-child { border-bottom:none }
+    .info-row span:first-child { color:var(--gray-400);font-weight:500 }
+    .info-row span:last-child { font-weight:600;color:var(--gray-900) }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h2>Serene Resolver</h2>
+      <span>Admin Portal · Academic Sanctuary</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" href="admin.html">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item active" href="admin-complaints.html">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Complaints
+      </a>
+      <a class="nav-item" href="status.html">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Status
+      </a>
+    </nav>
+    <div class="sidebar-bottom">
+      <button class="nav-item" onclick="logout()">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Logout
+      </button>
+    </div>
+  </aside>
+
+  <header class="topbar">
+    <span style="font-family:var(--font-main);font-weight:600;font-size:13px;color:var(--gray-700)">Manage Complaints</span>
+    <div class="topbar-right">
+      <button class="btn btn-primary" style="padding:8px 16px;font-size:13px" onclick="exportCSV()">⬇ Export CSV</button>
+      <div class="user-chip" id="user-chip"></div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="page-header">
+      <h1>All Complaints</h1>
+      <p>Search, filter, update status, and manage every complaint across all hostel blocks.</p>
+    </div>
+
+    <div class="filter-row">
+      <div class="search-box">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="search" type="text" placeholder="ID, title, student name..." oninput="applyFilters()">
+      </div>
+      <select class="f-sel" id="f-status" onchange="applyFilters()">
+        <option value="">All Statuses</option>
+        <option value="pending">Pending</option>
+        <option value="in_progress">In Progress</option>
+        <option value="resolved">Resolved</option>
+        <option value="closed">Closed</option>
+      </select>
+      <select class="f-sel" id="f-category" onchange="applyFilters()">
+        <option value="">All Categories</option>
+        <option>Electrical</option><option>Plumbing</option><option>Internet</option>
+        <option>Water</option><option>Maintenance</option><option>Mess</option>
+        <option>Noise</option><option>Other</option>
+      </select>
+      <select class="f-sel" id="f-priority" onchange="applyFilters()">
+        <option value="">All Priorities</option>
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+        <option value="critical">Critical</option>
+      </select>
+      <select class="f-sel" id="f-sort" onchange="applyFilters()">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="priority">By Priority</option>
+      </select>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-top">
+        <h3>Complaint Records <span id="count-badge" style="font-size:12px;color:var(--gray-400);font-weight:400;font-family:var(--font-body)"></span></h3>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:110px">ID</th>
+              <th>Student</th>
+              <th>Category</th>
+              <th style="min-width:200px">Title</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th style="width:110px">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div style="padding:12px 20px;border-top:1px solid var(--gray-100);display:flex;justify-content:space-between;align-items:center">
+        <span id="range-label" style="font-size:12.5px;color:var(--gray-400)"></span>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- View Detail Modal -->
+<div id="view-modal" class="modal-overlay" style="display:none" onclick="closeOnOverlay(event,'view-modal')">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <h2 id="view-id">Complaint Detail</h2>
+      <button class="close-btn" onclick="closeModal('view-modal')">×</button>
+    </div>
+    <div class="modal-body" id="view-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('view-modal')">Close</button>
+      <button class="btn btn-primary" id="view-open-btn">Open Full Page</button>
+    </div>
+  </div>
+</div>
+
+<!-- Update Status Modal -->
+<div id="status-modal" class="modal-overlay" style="display:none" onclick="closeOnOverlay(event,'status-modal')">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <h2>Update Status</h2>
+      <button class="close-btn" onclick="closeModal('status-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="update-id">
+      <div class="form-group">
+        <label class="form-label">Complaint</label>
+        <div id="update-title" style="font-size:13.5px;color:var(--gray-700);background:var(--gray-50);padding:10px 14px;border-radius:8px;border:1px solid var(--gray-200)"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">New Status</label>
+        <select id="update-status" class="form-select">
+          <option value="pending">⏳ Pending Review</option>
+          <option value="in_progress">↻ In Progress</option>
+          <option value="resolved">✓ Resolved</option>
+          <option value="closed">✗ Closed</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Assign To (optional)</label>
+        <input id="update-assign" class="form-input" placeholder="e.g. Electrician Team, John Kumar">
+      </div>
+      <div id="s-alert" class="alert" style="display:none"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('status-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="doUpdate()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/app.js"></script>
+<script>
+  let all = [], filtered = [], page = 1;
+  const PER = 15;
+  const priorityRank = { critical:4, high:3, medium:2, low:1 };
+
+  window.onload = async () => {
+    if (!requireAuth('admin')) return;
+    renderUserChip();
+    all = await apiFetch('/complaints');
+    applyFilters();
+  };
+
+  function applyFilters() {
+    const search   = el('search').value.toLowerCase();
+    const status   = el('f-status').value;
+    const category = el('f-category').value;
+    const priority = el('f-priority').value;
+    const sort     = el('f-sort').value;
+
+    filtered = all.filter(c => {
+      if (status   && c.status !== status)     return false;
+      if (category && c.category !== category) return false;
+      if (priority && c.priority !== priority) return false;
+      if (search && ![c.title, c.description, c.complaintId, c.studentName].some(f => f.toLowerCase().includes(search))) return false;
+      return true;
+    });
+
+    if (sort === 'oldest')   filtered.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
+    else if (sort === 'priority') filtered.sort((a,b) => (priorityRank[b.priority]||0) - (priorityRank[a.priority]||0));
+    else filtered.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    page = 1;
+    renderTable();
+  }
+
+  function renderTable() {
+    const start = (page-1)*PER;
+    const slice = filtered.slice(start, start+PER);
+    el('count-badge').textContent = `(${filtered.length} records)`;
+    el('range-label').textContent = filtered.length
+      ? `Showing ${start+1}–${Math.min(start+PER, filtered.length)} of ${filtered.length}`
+      : 'No records found';
+
+    if (!slice.length) {
+      el('tbody').innerHTML = `<tr><td colspan="8" style="text-align:center;padding:50px;color:var(--gray-400)">No complaints match your filters.</td></tr>`;
+    } else {
+      el('tbody').innerHTML = slice.map(c => `
+        <tr>
+          <td><span class="complaint-id">#${c.complaintId}</span></td>
+          <td>
+            <div style="font-size:13px;font-weight:600">${c.studentName}</div>
+            <div style="font-size:11.5px;color:var(--gray-400)">${c.block} · Rm ${c.room}</div>
+          </td>
+          <td><span style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--blue-mid)">${c.category}</span></td>
+          <td style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${c.title}">${c.title}</td>
+          <td>${priorityBadge(c.priority)}</td>
+          <td>${statusBadge(c.status)}</td>
+          <td style="font-size:12.5px;color:var(--gray-500);white-space:nowrap">${formatDate(c.createdAt)}</td>
+          <td>
+            <div style="display:flex;gap:5px">
+              <button class="act-btn b" title="View" onclick="viewComplaint('${c._id}')">👁</button>
+              <button class="act-btn g" title="Update Status" onclick="openUpdate('${c._id}','${c.status}','${c.title.replace(/'/g,"\\'")}','${c.assignedTo||''}')">✓</button>
+              <button class="act-btn r" title="Delete" onclick="delComplaint('${c._id}')">🗑</button>
+            </div>
+          </td>
+        </tr>`).join('');
+    }
+
+    // Pagination
+    const total = Math.ceil(filtered.length / PER);
+    el('pagination').innerHTML = Array.from({length:total},(_,i)=>
+      `<button class="pg-btn ${i+1===page?'active':''}" onclick="goPage(${i+1})">${i+1}</button>`
+    ).join('');
+  }
+
+  function goPage(p) { page=p; renderTable(); window.scrollTo(0,0); }
+
+  async function viewComplaint(id) {
+    const c = await apiFetch(`/complaints/${id}`);
+    el('view-id').textContent = `#${c.complaintId} — ${c.category}`;
+    el('view-open-btn').onclick = () => window.open(`detail.html?id=${id}`,'_blank');
+    el('view-body').innerHTML = `
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        ${statusBadge(c.status)} ${priorityBadge(c.priority)}
+      </div>
+      <div class="detail-preview">${c.description}</div>
+      ${c.imageUrl ? `<img src="http://localhost:5000${c.imageUrl}" style="width:100%;border-radius:8px;margin-bottom:12px;max-height:200px;object-fit:cover">` : ''}
+      <div>
+        <div class="info-row"><span>Student</span><span>${c.studentName}</span></div>
+        <div class="info-row"><span>Block / Room</span><span>${c.block} · ${c.room}</span></div>
+        <div class="info-row"><span>Submitted</span><span>${formatDate(c.createdAt)}</span></div>
+        <div class="info-row"><span>Last Updated</span><span>${timeAgo(c.updatedAt)}</span></div>
+        ${c.assignedTo ? `<div class="info-row"><span>Assigned To</span><span>${c.assignedTo}</span></div>` : ''}
+        <div class="info-row"><span>Messages</span><span>${(c.messages||[]).length} message(s)</span></div>
+        <div class="info-row"><span>Anonymous</span><span>${c.isAnonymous ? 'Yes' : 'No'}</span></div>
+      </div>`;
+    el('view-modal').style.display = 'flex';
+  }
+
+  function openUpdate(id, status, title, assignedTo) {
+    el('update-id').value = id;
+    el('update-status').value = status;
+    el('update-title').textContent = title;
+    el('update-assign').value = assignedTo || '';
+    el('s-alert').style.display = 'none';
+    el('status-modal').style.display = 'flex';
+  }
+
+  async function doUpdate() {
+    const id = el('update-id').value;
+    try {
+      const updated = await apiFetch(`/complaints/${id}/status`, {
+        method:'PATCH',
+        body: JSON.stringify({ status: el('update-status').value, assignedTo: el('update-assign').value })
+      });
+      // Update local data
+      const idx = all.findIndex(c => c._id === id);
+      if (idx !== -1) all[idx] = { ...all[idx], status: updated.status, assignedTo: updated.assignedTo };
+      showAlert('s-alert','Status updated successfully!','success');
+      setTimeout(() => { closeModal('status-modal'); applyFilters(); }, 700);
+    } catch(err) { showAlert('s-alert', err.message); }
+  }
+
+  async function delComplaint(id) {
+    if (!confirm('Permanently delete this complaint? This cannot be undone.')) return;
+    try {
+      await apiFetch(`/complaints/${id}`, { method:'DELETE' });
+      all = all.filter(c => c._id !== id);
+      applyFilters();
+    } catch(err) { alert(err.message); }
+  }
+
+  function exportCSV() {
+    const rows = filtered.map(c =>
+      [c.complaintId, c.studentName, c.block, c.room, c.category, c.title.replace(/,/g,' '), c.status, c.priority, formatDate(c.createdAt)].join(',')
+    );
+    const csv = `ID,Student,Block,Room,Category,Title,Status,Priority,Date\n${rows.join('\n')}`;
+    const blob = new Blob([csv], {type:'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `complaints_export_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+  }
+
+  function closeModal(id) { el(id).style.display = 'none'; }
+  function closeOnOverlay(e, id) { if (e.target === el(id)) closeModal(id); }
+</script>
+</body>
+</html>

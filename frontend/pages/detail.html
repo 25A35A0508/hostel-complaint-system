@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Serene Resolver — Complaint Detail</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .detail-layout { display:grid;grid-template-columns:1fr 320px;gap:20px }
+    .timeline { position:relative;padding-left:24px }
+    .timeline::before { content:'';position:absolute;left:7px;top:8px;bottom:8px;width:2px;background:var(--gray-200) }
+    .timeline-item { position:relative;margin-bottom:20px }
+    .timeline-dot { position:absolute;left:-24px;top:4px;width:16px;height:16px;border-radius:50%;border:2px solid var(--gray-300);background:white;display:flex;align-items:center;justify-content:center }
+    .timeline-dot.done  { border-color:var(--green);background:var(--green) }
+    .timeline-dot.active{ border-color:var(--blue);background:white }
+    .timeline-dot.done svg { color:white }
+    .timeline-label { font-size:13.5px;font-weight:600;color:var(--gray-900) }
+    .timeline-sub   { font-size:12px;color:var(--gray-400);margin-top:2px }
+    .timeline-label.dim { color:var(--gray-400);font-weight:400 }
+    .priority-card { background:linear-gradient(135deg,var(--navy),var(--blue));border-radius:12px;padding:18px;color:white;margin-bottom:16px }
+    .priority-card h4 { font-size:14px;font-weight:700;margin-bottom:6px }
+    .priority-card p  { font-size:12.5px;opacity:.85;line-height:1.5 }
+    .callback-btn { width:100%;padding:10px;background:white;color:var(--navy);border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin-top:12px;font-family:var(--font-body);transition:all .15s }
+    .callback-btn:hover { background:var(--blue-pale) }
+    .breadcrumb { display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--gray-400);margin-bottom:16px }
+    .breadcrumb a { color:var(--blue);text-decoration:none }
+    .breadcrumb a:hover { text-decoration:underline }
+    @media(max-width:800px) { .detail-layout { grid-template-columns:1fr } }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h2>Serene Resolver</h2>
+      <span>Student Portal · Academic Sanctuary</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" href="dashboard.html">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item active" href="complaints.html">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Complaints
+      </a>
+      <a class="nav-item" href="status.html">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Status
+      </a>
+    </nav>
+    <div class="sidebar-bottom">
+      <button class="nav-item" onclick="logout()">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Logout
+      </button>
+    </div>
+  </aside>
+
+  <header class="topbar">
+    <div class="topbar-right">
+      <div class="user-chip" id="user-chip"></div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="page-header">
+      <div class="breadcrumb">
+        <a href="complaints.html">Complaints</a>
+        <span>›</span>
+        <span id="breadcrumb-id" style="color:var(--blue);font-weight:600">Loading...</span>
+      </div>
+    </div>
+
+    <div id="detail-area">
+      <div class="empty-state"><p>Loading complaint...</p></div>
+    </div>
+  </main>
+</div>
+
+<script src="../js/app.js"></script>
+<script>
+  window.onload = async () => {
+    if (!requireAuth()) return;
+    renderUserChip();
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+    if (!id) { window.location.href = 'complaints.html'; return; }
+
+    const c = await apiFetch(`/complaints/${id}`);
+    el('breadcrumb-id').textContent = `CMP-${c.complaintId}`;
+    document.title = `${c.complaintId} — Serene Resolver`;
+    renderDetail(c);
+  };
+
+  function renderDetail(c) {
+    const isResolved = c.status === 'resolved';
+    const isInProgress = c.status === 'in_progress';
+
+    const msgs = (c.messages || []).map(m => {
+      const isStudent = m.senderRole === 'student';
+      return `<div style="display:flex;flex-direction:column;${isStudent ? 'align-items:flex-end' : ''}; margin-bottom:16px">
+        <div class="chat-meta"><strong>${m.sender}</strong> · ${timeAgo(m.time)}</div>
+        <div class="chat-bubble ${isStudent ? 'chat-from-student' : 'chat-from-admin'}">${m.text}</div>
+      </div>`;
+    }).join('');
+
+    el('detail-area').innerHTML = `
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+        <span class="badge" style="background:#EFF6FF;color:var(--navy);text-transform:uppercase;font-size:11px;letter-spacing:.06em">${c.category}</span>
+        <span style="font-size:12.5px;color:var(--gray-400)">Submitted: ${formatDate(c.createdAt)}</span>
+      </div>
+      <h1 style="font-family:var(--font-main);font-size:24px;font-weight:700;color:var(--gray-900);margin-bottom:10px;line-height:1.3">${c.title}</h1>
+      <p style="font-size:14px;color:var(--gray-600,#475569);line-height:1.7;margin-bottom:24px">${c.description}</p>
+
+      <div class="detail-layout">
+        <!-- Left column -->
+        <div>
+          ${c.imageUrl ? `
+            <div style="margin-bottom:24px">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--gray-400);margin-bottom:10px">Visual Evidence</div>
+              <img src="http://localhost:5000${c.imageUrl}" style="width:100%;border-radius:12px;object-fit:cover;max-height:260px">
+            </div>` : ''}
+
+          <div class="card card-padded" style="margin-bottom:16px">
+            <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--gray-400);margin-bottom:16px">Communication Hub</div>
+            <div id="chat-area" style="min-height:60px;margin-bottom:16px">
+              ${msgs || '<p style="color:var(--gray-400);font-size:13px;text-align:center;padding:16px">No messages yet. Start the conversation.</p>'}
+            </div>
+            <div style="display:flex;gap:8px;border:1px solid var(--gray-200);border-radius:10px;padding:10px 14px;align-items:center">
+              <input id="msg-input" class="form-input" placeholder="Write a message..." style="border:none;background:none;padding:0;flex:1;font-size:13.5px">
+              <span style="color:var(--gray-300,#CBD5E1);cursor:pointer;font-size:18px">📎</span>
+              <button class="btn btn-primary" style="padding:8px 16px;font-size:13px" onclick="sendMsg('${c._id}')">Send Message</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right column -->
+        <div>
+          <div class="card card-padded" style="margin-bottom:16px">
+            <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--gray-400);margin-bottom:16px">Resolution Progress</div>
+            <div class="timeline">
+              <div class="timeline-item">
+                <div class="timeline-dot done">
+                  <svg width="8" height="8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="timeline-label">Complaint Pending</div>
+                <div class="timeline-sub">${timeAgo(c.createdAt)}</div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot ${isInProgress || isResolved ? 'done' : 'active'}">
+                  ${isInProgress || isResolved ? `<svg width="8" height="8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>` : `<div style="width:6px;height:6px;border-radius:50%;background:var(--blue)"></div>`}
+                </div>
+                <div class="timeline-label ${!isInProgress && !isResolved ? 'dim' : ''}" style="color:${isInProgress ? 'var(--blue)' : ''}">
+                  ${isInProgress ? 'In Progress' : isResolved ? 'Was In Progress' : 'In Progress'}
+                </div>
+                <div class="timeline-sub">${isInProgress || isResolved ? timeAgo(c.updatedAt) : 'Pending'}</div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot ${isResolved ? 'done' : ''}">
+                  ${isResolved ? `<svg width="8" height="8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
+                </div>
+                <div class="timeline-label ${!isResolved ? 'dim' : ''}">Resolved</div>
+                <div class="timeline-sub">${isResolved ? `Resolved ${timeAgo(c.resolvedAt)}` : 'Expected completion: Today'}</div>
+              </div>
+            </div>
+          </div>
+
+          ${c.priority === 'high' || c.priority === 'critical' ? `
+          <div class="priority-card">
+            <div style="font-size:20px;margin-bottom:8px">🛡</div>
+            <h4>Priority Status</h4>
+            <p>This issue has been marked as <strong>${c.priority === 'critical' ? 'Critical' : 'High Priority'}</strong> due to potential impact on hostel property.</p>
+            <button class="callback-btn">Request Callback</button>
+          </div>` : ''}
+
+          <div class="card card-padded">
+            <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--gray-400);margin-bottom:12px">Complaint Info</div>
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-400)">ID</span><strong>#${c.complaintId}</strong></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-400)">Status</span>${statusBadge(c.status)}</div>
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-400)">Priority</span>${priorityBadge(c.priority)}</div>
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-400)">Block</span><strong>${c.block}</strong></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--gray-400)">Room</span><strong>${c.room}</strong></div>
+              ${c.assignedTo ? `<div style="display:flex;justify-content:space-between"><span style="color:var(--gray-400)">Assigned To</span><strong>${c.assignedTo}</strong></div>` : ''}
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  async function sendMsg(id) {
+    const text = el('msg-input').value.trim();
+    if (!text) return;
+    const updated = await apiFetch(`/complaints/${id}/message`, {
+      method: 'POST', body: JSON.stringify({ text })
+    });
+    el('msg-input').value = '';
+    const user = getUser();
+    const div = document.createElement('div');
+    const isStudent = user.role === 'student';
+    div.style.cssText = `display:flex;flex-direction:column;${isStudent?'align-items:flex-end':''};margin-bottom:16px`;
+    div.innerHTML = `<div class="chat-meta"><strong>${user.name}</strong> · just now</div>
+      <div class="chat-bubble ${isStudent?'chat-from-student':'chat-from-admin'}">${text}</div>`;
+    const chatArea = el('chat-area');
+    const placeholder = chatArea.querySelector('p');
+    if (placeholder) placeholder.remove();
+    chatArea.appendChild(div);
+    chatArea.scrollTop = chatArea.scrollHeight;
+  }
+</script>
+</body>
+</html>

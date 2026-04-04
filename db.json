@@ -1,0 +1,123 @@
+{
+  "users": [
+    {
+      "_id": "kj4n0qsvymnjub7eb",
+      "name": "Admin User",
+      "email": "admin@hostel.edu",
+      "password": "$2a$10$vZ6zZf.g.oPJn6VxCo7AJes5/JfVGNJx4g26rZ1fipH5ZS8IWKuem",
+      "role": "admin",
+      "room": "Office",
+      "block": "Admin",
+      "createdAt": "2026-04-04T04:36:12.467Z"
+    },
+    {
+      "_id": "lh8hdxco9mnjub7ec",
+      "name": "Alex Rivers",
+      "email": "alex@university.edu",
+      "password": "$2a$10$vZ6zZf.g.oPJn6VxCo7AJes5/JfVGNJx4g26rZ1fipH5ZS8IWKuem",
+      "role": "student",
+      "room": "402-B",
+      "block": "Block C",
+      "createdAt": "2026-04-04T04:36:12.468Z"
+    },
+    {
+      "_id": "rn5zmgqwhmnjub7ec",
+      "name": "Sarah Miller",
+      "email": "sarah@university.edu",
+      "password": "$2a$10$vZ6zZf.g.oPJn6VxCo7AJes5/JfVGNJx4g26rZ1fipH5ZS8IWKuem",
+      "role": "student",
+      "room": "112",
+      "block": "Block A",
+      "createdAt": "2026-04-04T04:36:12.468Z"
+    }
+  ],
+  "complaints": [
+    {
+      "_id": "6lk9xxkm1mnjub7ec",
+      "complaintId": "SR-8842",
+      "studentId": "lh8hdxco9mnjub7ec",
+      "studentName": "Alex Rivers",
+      "room": "402-B",
+      "block": "Block C",
+      "category": "Electrical",
+      "title": "Main ceiling light flickering in Room 402-B",
+      "description": "The ceiling light has been flickering for 3 days.",
+      "priority": "medium",
+      "status": "in_progress",
+      "isAnonymous": false,
+      "imageUrl": "",
+      "assignedTo": "",
+      "messages": [],
+      "createdAt": "2026-04-04T04:36:12.468Z",
+      "updatedAt": "2026-04-04T04:36:12.468Z"
+    },
+    {
+      "_id": "i9zz3lyj2mnjub7ec",
+      "complaintId": "SR-8810",
+      "studentId": "lh8hdxco9mnjub7ec",
+      "studentName": "Alex Rivers",
+      "room": "402-B",
+      "block": "Block C",
+      "category": "Plumbing",
+      "title": "Low water pressure in shared bathroom floor 3",
+      "description": "Water pressure very low since Monday.",
+      "priority": "low",
+      "status": "resolved",
+      "isAnonymous": false,
+      "imageUrl": "",
+      "assignedTo": "",
+      "messages": [],
+      "createdAt": "2026-04-04T04:36:12.468Z",
+      "updatedAt": "2026-04-04T04:36:12.468Z",
+      "resolvedAt": "2026-04-04T04:36:12.468Z"
+    },
+    {
+      "_id": "ho7n4ty9wmnjub7ec",
+      "complaintId": "SR-8901",
+      "studentId": "lh8hdxco9mnjub7ec",
+      "studentName": "Alex Rivers",
+      "room": "402-B",
+      "block": "Block C",
+      "category": "Internet",
+      "title": "WiFi authentication failing on mobile devices",
+      "description": "Cannot connect to hostel WiFi on Android.",
+      "priority": "high",
+      "status": "pending",
+      "isAnonymous": false,
+      "imageUrl": "",
+      "assignedTo": "",
+      "messages": [],
+      "createdAt": "2026-04-04T04:36:12.468Z",
+      "updatedAt": "2026-04-04T04:36:12.468Z"
+    },
+    {
+      "_id": "7tw3t40jcmnjub7ec",
+      "complaintId": "SR-8855",
+      "studentId": "lh8hdxco9mnjub7ec",
+      "studentName": "Alex Rivers",
+      "room": "402-B",
+      "block": "Block C",
+      "category": "Water",
+      "title": "Leakage near water cooler base - Block C",
+      "description": "Water pooling on floor near the cooler.",
+      "priority": "high",
+      "status": "in_progress",
+      "isAnonymous": false,
+      "imageUrl": "",
+      "assignedTo": "Plumbing Team",
+      "messages": [],
+      "createdAt": "2026-04-04T04:36:12.468Z",
+      "updatedAt": "2026-04-04T04:36:12.468Z"
+    }
+  ],
+  "notices": [
+    {
+      "_id": "r65jaxv4jmnjub7ec",
+      "title": "Maintenance Window",
+      "content": "Scheduled maintenance for Central Block plumbing systems will occur this Sunday between 10:00 AM and 02:00 PM.",
+      "createdBy": "Admin",
+      "isActive": true,
+      "createdAt": "2026-04-04T04:36:12.468Z"
+    }
+  ]
+}

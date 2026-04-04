@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Serene Resolver — Status Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .status-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:24px }
+    .status-track-card { background:white;border:1px solid var(--gray-200);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm) }
+    .status-track-header { padding:14px 18px;border-bottom:1px solid var(--gray-100);display:flex;justify-content:space-between;align-items:center }
+    .status-track-body { padding:16px 18px }
+    .progress-steps { display:flex;align-items:center;gap:0;margin:14px 0 10px }
+    .step { display:flex;flex-direction:column;align-items:center;flex:1;position:relative }
+    .step-dot { width:24px;height:24px;border-radius:50%;border:2px solid var(--gray-300);background:white;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;z-index:1;position:relative }
+    .step-dot.done   { background:var(--green);border-color:var(--green);color:white }
+    .step-dot.active { background:var(--blue);border-color:var(--blue);color:white }
+    .step-dot.grey   { background:var(--gray-100);border-color:var(--gray-200);color:var(--gray-400) }
+    .step-label { font-size:10px;color:var(--gray-400);margin-top:5px;text-align:center;line-height:1.3 }
+    .step-label.done   { color:var(--green);font-weight:600 }
+    .step-label.active { color:var(--blue);font-weight:600 }
+    .step-line { flex:1;height:2px;background:var(--gray-200);margin:0 -2px;margin-bottom:18px;position:relative;top:-9px }
+    .step-line.done { background:var(--green) }
+    .track-id { font-size:13px;font-weight:700;color:var(--blue) }
+    .track-title { font-size:14px;font-weight:600;color:var(--gray-900);margin-bottom:4px }
+    .track-meta  { font-size:12px;color:var(--gray-400) }
+    .summary-bar { display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--gray-100);border-radius:12px;overflow:hidden;margin-bottom:24px }
+    .summary-cell { background:white;padding:20px;text-align:center }
+    .summary-num { font-family:var(--font-main);font-size:32px;font-weight:700;line-height:1 }
+    .summary-lbl { font-size:12px;color:var(--gray-400);margin-top:4px;font-weight:500 }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h2>Serene Resolver</h2>
+      <span id="portal-label">Student Portal · Academic Sanctuary</span>
+    </div>
+    <nav class="sidebar-nav" id="sidebar-nav"></nav>
+    <div class="sidebar-bottom">
+      <button class="raise-btn" id="raise-btn-sidebar" onclick="openRaiseModal()" style="display:none">+ Raise Complaint</button>
+      <button class="nav-item" onclick="logout()">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Logout
+      </button>
+    </div>
+  </aside>
+
+  <header class="topbar">
+    <div class="topbar-right">
+      <div class="user-chip" id="user-chip"></div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="page-header">
+      <h1>Status Tracker</h1>
+      <p>Live overview of all complaint statuses and resolution progress.</p>
+    </div>
+
+    <!-- Summary Bar -->
+    <div class="summary-bar">
+      <div class="summary-cell">
+        <div class="summary-num" id="s-total" style="color:var(--navy)">—</div>
+        <div class="summary-lbl">Total</div>
+      </div>
+      <div class="summary-cell">
+        <div class="summary-num" id="s-pending" style="color:var(--amber)">—</div>
+        <div class="summary-lbl">Pending</div>
+      </div>
+      <div class="summary-cell">
+        <div class="summary-num" id="s-progress" style="color:var(--blue)">—</div>
+        <div class="summary-lbl">In Progress</div>
+      </div>
+      <div class="summary-cell">
+        <div class="summary-num" id="s-resolved" style="color:var(--green)">—</div>
+        <div class="summary-lbl">Resolved</div>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:8px;background:white;border:1px solid var(--gray-200);border-radius:8px;padding:9px 14px;flex:1;max-width:340px">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="track-search" type="text" placeholder="Search by ID or title..." style="border:none;background:none;font-size:13px;font-family:var(--font-body);color:var(--gray-700);width:100%;outline:none" oninput="renderCards()">
+      </div>
+      <select id="s-filter" class="form-select" style="max-width:180px" onchange="renderCards()">
+        <option value="">All Statuses</option>
+        <option value="pending">Pending</option>
+        <option value="in_progress">In Progress</option>
+        <option value="resolved">Resolved</option>
+        <option value="closed">Closed</option>
+      </select>
+    </div>
+
+    <div class="status-grid" id="status-grid">
+      <div class="empty-state" style="grid-column:1/-1"><p>Loading...</p></div>
+    </div>
+  </main>
+</div>
+
+<!-- Raise modal -->
+<div id="raise-modal" class="modal-overlay" style="display:none" onclick="closeOnOverlay(event,'raise-modal')">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>✦ Raise a Complaint</h2>
+      <button class="close-btn" onclick="closeModal('raise-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="raise-alert" class="alert" style="display:none"></div>
+      <form id="raise-form" onsubmit="submitComplaint(event)">
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select id="r-category" class="form-select" required>
+            <option value="">Select category...</option>
+            <option>Electrical</option><option>Plumbing</option><option>Internet</option>
+            <option>Water</option><option>Maintenance</option><option>Mess</option><option>Noise</option><option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Title</label>
+          <input id="r-title" class="form-input" type="text" placeholder="Brief description" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea id="r-desc" class="form-textarea" required></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Priority</label>
+          <select id="r-priority" class="form-select">
+            <option value="low">Low</option><option value="medium" selected>Medium</option>
+            <option value="high">High</option><option value="critical">Critical</option>
+          </select>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('raise-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="el('raise-form').dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}))">Submit</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/app.js"></script>
+<script>
+  let complaints = [];
+
+  window.onload = async () => {
+    if (!requireAuth()) return;
+    renderUserChip();
+    const user = getUser();
+
+    // Build dynamic sidebar based on role
+    const isAdmin = user.role === 'admin';
+    el('portal-label').textContent = isAdmin ? 'Admin Portal · Academic Sanctuary' : 'Student Portal · Academic Sanctuary';
+    el('sidebar-nav').innerHTML = (isAdmin ? [
+      ['admin.html','Dashboard','grid'],
+      ['admin-complaints.html','Complaints','file'],
+      ['status.html','Status','clock'],
+    ] : [
+      ['dashboard.html','Dashboard','grid'],
+      ['complaints.html','Complaints','file'],
+      ['status.html','Status','clock'],
+    ]).map(([href,label,icon]) => `
+      <a class="nav-item ${href==='status.html'?'active':''}" href="${href}">
+        ${navIcon(icon)}${label}
+      </a>`).join('');
+
+    if (!isAdmin) el('raise-btn-sidebar').style.display = 'flex';
+
+    const [s, data] = await Promise.all([apiFetch('/complaints/stats'), apiFetch('/complaints')]);
+    el('s-total').textContent    = s.total;
+    el('s-pending').textContent  = s.pending;
+    el('s-progress').textContent = s.inProgress;
+    el('s-resolved').textContent = s.resolved;
+    complaints = data;
+    renderCards();
+  };
+
+  function navIcon(type) {
+    const icons = {
+      grid: '<svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/></svg>',
+      file: '<svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+      clock:'<svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+    };
+    return icons[type] || '';
+  }
+
+  function stepState(status, step) {
+    // steps: 0=submitted, 1=in_progress, 2=resolved
+    const rank = { pending:0, in_progress:1, resolved:2, closed:2 };
+    const cur = rank[status] ?? 0;
+    if (step < cur) return 'done';
+    if (step === cur) return status === 'pending' && step === 0 ? 'done' : (status === 'resolved' || status === 'closed') && step === 2 ? 'done' : step === cur ? 'active' : 'grey';
+    return 'grey';
+  }
+
+  function renderCards() {
+    const search = el('track-search').value.toLowerCase();
+    const filter = el('s-filter').value;
+
+    const filtered = complaints.filter(c => {
+      if (filter && c.status !== filter) return false;
+      if (search && !c.title.toLowerCase().includes(search) && !c.complaintId.toLowerCase().includes(search)) return false;
+      return true;
+    });
+
+    if (!filtered.length) {
+      el('status-grid').innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+        <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        <h3>No complaints found</h3></div>`;
+      return;
+    }
+
+    const steps = [
+      { label: 'Submitted' },
+      { label: 'In Progress' },
+      { label: 'Resolved' },
+    ];
+
+    el('status-grid').innerHTML = filtered.map(c => {
+      const stepStates = [
+        c.status === 'pending' ? 'done' : 'done',
+        (c.status === 'in_progress' || c.status === 'resolved' || c.status === 'closed') ? 'done' : 'grey',
+        (c.status === 'resolved' || c.status === 'closed') ? 'done' : 'grey',
+      ];
+
+      const progressHTML = steps.map((s, i) => `
+        <div class="step">
+          <div class="step-dot ${stepStates[i]}">${stepStates[i]==='done'?'✓':i+1}</div>
+          <div class="step-label ${stepStates[i]}">${s.label}</div>
+        </div>
+        ${i < steps.length-1 ? `<div class="step-line ${stepStates[i]==='done'?'done':''}"></div>` : ''}
+      `).join('');
+
+      const catColors = { Electrical:'#DBEAFE', Plumbing:'#FEF3C7', Water:'#E0F2FE', Internet:'#F3E8FF', Maintenance:'#FEE2E2', Mess:'#DCFCE7', Noise:'#FFF7ED', Other:'#F1F5F9' };
+      const headerBg = catColors[c.category] || '#F1F5F9';
+
+      return `
+        <div class="status-track-card">
+          <div class="status-track-header" style="background:${headerBg}">
+            <div>
+              <div class="track-id">#${c.complaintId}</div>
+              <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;color:var(--gray-500);margin-top:2px">${c.category}</div>
+            </div>
+            ${statusBadge(c.status)}
+          </div>
+          <div class="status-track-body">
+            <div class="track-title">${c.title}</div>
+            <div class="track-meta">Raised ${timeAgo(c.createdAt)} · ${c.block}, Room ${c.room}</div>
+            <div class="progress-steps">${progressHTML}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+              ${priorityBadge(c.priority)}
+              <a href="detail.html?id=${c._id}" style="font-size:12.5px;color:var(--blue);font-weight:600;text-decoration:none">View Details →</a>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function openRaiseModal() { el('raise-modal').style.display = 'flex'; }
+  function closeModal(id) { el(id).style.display = 'none'; }
+  function closeOnOverlay(e, id) { if (e.target === el(id)) closeModal(id); }
+
+  async function submitComplaint(e) {
+    e.preventDefault();
+    const user = getUser();
+    const fd = new FormData();
+    fd.append('category', el('r-category').value);
+    fd.append('title', el('r-title').value);
+    fd.append('description', el('r-desc').value);
+    fd.append('priority', el('r-priority').value);
+    fd.append('room', user.room || 'N/A');
+    fd.append('block', user.block || 'N/A');
+    try {
+      await apiFetch('/complaints', { method:'POST', body:fd, headers:{} });
+      showAlert('raise-alert', 'Submitted!', 'success');
+      setTimeout(async () => {
+        closeModal('raise-modal');
+        complaints = await apiFetch('/complaints');
+        renderCards();
+      }, 900);
+    } catch(err) { showAlert('raise-alert', err.message); }
+  }
+</script>
+</body>
+</html>
