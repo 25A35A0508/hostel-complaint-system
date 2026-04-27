@@ -1,8 +1,10 @@
 # Hostel Complaint Management System
 
 ##Contributers 
-D.Vagdevi - 25A35A0508
+D.Vagdevi - 25A35A0508 
 D.Harshini Sri - 24A31A0571
+Karupothu Rahul - 24A31A05AN
+Chilukuri Durga Prasad - 24A31A05AJ
 
 ## 📌 Project Description
 This project is a web application developed to manage hostel complaints efficiently. Students can raise complaints, track their status, and administrators can manage and resolve them.
